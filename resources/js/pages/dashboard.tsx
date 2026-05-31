@@ -1,4 +1,3 @@
-import EnterpriseLayout from '@/layouts/EnterpriseLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { 
     Box, 
@@ -23,6 +22,7 @@ import {
     BarChart,
     Bar
 } from 'recharts';
+import EnterpriseLayout from '@/layouts/EnterpriseLayout';
 
 // Mock Data for Charts
 const stockMovementData = [
@@ -69,16 +69,7 @@ const lowStockAlerts = [
 
 export default function Dashboard() {
     const user = usePage().props.auth.user;
-    
-    // Custom Header for the layout
-    const header = (
-        <div>
-            <h2 className="text-xl font-bold leading-tight text-slate-800">
-                Dashboard
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">Sunday, May 31, 2026</p>
-        </div>
-    );
+
 
     return (
         <>

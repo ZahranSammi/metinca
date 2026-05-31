@@ -1,16 +1,14 @@
-import EnterpriseLayout from '@/layouts/EnterpriseLayout';
 import { Head, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import { 
     Eye, 
     Plus, 
     Trash2, 
-    Check, 
     Send, 
-    FileText,
     History
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import EnterpriseLayout from '@/layouts/EnterpriseLayout';
 
 // Mock Inventory Items for Selection
 const inventoryItems = [
@@ -58,7 +56,10 @@ export default function Requests() {
 
     // Derived filtered requests
     const filteredRequests = requestsList.filter(req => {
-        if (statusFilter === 'All') return true;
+        if (statusFilter === 'All') {
+return true;
+}
+
         return req.status === statusFilter;
     });
 
@@ -102,8 +103,10 @@ export default function Requests() {
     const removeRequestItem = (id: string) => {
         if (selectedItems.length === 1) {
             toast.error('At least one item is required.');
+
             return;
         }
+
         setSelectedItems(selectedItems.filter(item => item.id !== id));
     };
 
@@ -113,6 +116,7 @@ export default function Requests() {
             if (item.id === id) {
                 return { ...item, [field]: value };
             }
+
             return item;
         }));
     };
@@ -123,8 +127,10 @@ export default function Requests() {
 
         // Validation
         const incomplete = selectedItems.some(item => !item.itemCode);
+
         if (incomplete) {
             toast.error('Please select an item for all rows.');
+
             return;
         }
 
@@ -151,14 +157,7 @@ export default function Requests() {
         setActiveTab('history');
     };
 
-    const header = (
-        <div>
-            <h2 className="text-xl font-bold leading-tight text-slate-800">
-                Item Requests
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">Sunday, May 31, 2026</p>
-        </div>
-    );
+
 
     return (
         <>
@@ -349,6 +348,7 @@ export default function Requests() {
                             <div className="space-y-3">
                                 {selectedItems.map((item, index) => {
                                     const matchedItem = inventoryItems.find(i => i.code === item.itemCode);
+
                                     return (
                                         <div key={item.id} className="flex flex-col md:flex-row items-start md:items-center gap-3 bg-slate-50/40 p-4 rounded-2xl border border-slate-100/80">
                                             {/* Row Index */}

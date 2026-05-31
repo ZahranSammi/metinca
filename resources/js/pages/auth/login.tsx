@@ -1,6 +1,4 @@
-import InputError from '@/components/input-error';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
 import { 
     Eye, 
     EyeOff, 
@@ -10,6 +8,9 @@ import {
     Layers, 
     Package
 } from 'lucide-react';
+import type { FormEventHandler} from 'react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { store } from '@/routes/login';
 
 type Props = {

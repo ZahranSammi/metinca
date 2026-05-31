@@ -11,7 +11,7 @@ import {
     ChevronDown,
     HelpCircle
 } from 'lucide-react';
-import { PropsWithChildren, ReactNode } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 
 export default function EnterpriseLayout({
     header,
@@ -27,6 +27,7 @@ export default function EnterpriseLayout({
         form.method = 'POST';
         form.action = '/logout';
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
         if (csrfToken) {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -34,6 +35,7 @@ export default function EnterpriseLayout({
             input.value = csrfToken;
             form.appendChild(input);
         }
+
         document.body.appendChild(form);
         form.submit();
     };

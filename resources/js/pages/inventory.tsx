@@ -1,14 +1,13 @@
-import EnterpriseLayout from '@/layouts/EnterpriseLayout';
 import { Head } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
 import { 
     Search, 
     FileDown, 
     Eye, 
     ChevronLeft, 
-    ChevronRight,
-    SlidersHorizontal
+    ChevronRight
 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import EnterpriseLayout from '@/layouts/EnterpriseLayout';
 
 // Mock inventory data
 const initialInventory = [
@@ -46,6 +45,7 @@ export default function Inventory() {
         const normal = initialInventory.filter(item => item.status === 'Normal').length;
         const lowOrCritical = initialInventory.filter(item => item.status === 'Low Stock' || item.status === 'Critical').length;
         const outOfStock = initialInventory.filter(item => item.status === 'Out of Stock').length;
+
         return { total, normal, lowOrCritical, outOfStock };
     }, []);
 
@@ -69,6 +69,7 @@ export default function Inventory() {
     const totalPages = Math.ceil(filteredInventory.length / itemsPerPage) || 1;
     const paginatedInventory = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
+
         return filteredInventory.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredInventory, currentPage]);
 
@@ -106,14 +107,7 @@ export default function Inventory() {
         }
     };
 
-    const header = (
-        <div>
-            <h2 className="text-xl font-bold leading-tight text-slate-800">
-                Inventory Management
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">Sunday, May 31, 2026</p>
-        </div>
-    );
+
 
     return (
         <>
