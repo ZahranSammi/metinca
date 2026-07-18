@@ -5,7 +5,7 @@ export default function Dashboard({ auth, fundRequests, reports }) {
     
     const handleApproval = (id, status) => {
         if (confirm(`Anda yakin ingin ${status === 'Disetujui' ? 'Menyetujui' : 'Menolak'} pengajuan ini?`)) {
-            router.put(route('fund-requests.update', id), { status: status });
+            router.put(route('manager-acc.approval-dana.update', id), { status: status });
         }
     };
 
@@ -34,7 +34,7 @@ export default function Dashboard({ auth, fundRequests, reports }) {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {fundRequests.map((req) => (
                                     <tr key={req.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.damage_report?.machine_name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.damage_report?.machine?.name}</td>
                                         <td className="px-6 py-4 text-sm text-gray-500">{req.damage_report?.description}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Rp {Number(req.amount).toLocaleString('id-ID')}</td>
                                         <td className="px-6 py-4 text-sm text-gray-500">{req.description}</td>
@@ -77,7 +77,7 @@ export default function Dashboard({ auth, fundRequests, reports }) {
                                 {reports.map((report) => (
                                     <tr key={report.id}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(report.created_at).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{report.machine_name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{report.machine?.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                 {report.status}

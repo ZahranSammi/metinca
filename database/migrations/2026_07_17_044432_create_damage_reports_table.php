@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('damage_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('machine_name');
+            $table->foreignId('machine_id')->constrained('machines')->onDelete('cascade');
+            $table->string('photo_path')->nullable();
             $table->text('description');
             $table->string('status')->default('Dilaporkan');
             $table->timestamps();

@@ -1,92 +1,130 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import StatCard from '@/Components/StatCard';
+import Badge from '@/Components/Badge';
+import { FileText, CheckCircle, RefreshCcw, XCircle, Edit3 } from 'lucide-react';
+import { 
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend
+} from 'recharts';
 
-export default function Dashboard({ auth, reports }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        machine_name: '',
-        description: '',
-    });
-
-    const submit = (e) => {
-        e.preventDefault();
-        post(route('damage-reports.store'), {
-            onSuccess: () => reset(),
-        });
-    };
-
+export default function Dashboard({ stats, pieData, lineData, actionRequiredReports }) {
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard Manager Maintenance</h2>}
-        >
+        <AuthenticatedLayout header="Dashboard">
             <Head title="Dashboard" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 mb-6">
-                        <h3 className="text-lg font-bold mb-4">Buat Laporan Mesin Rusak</h3>
-                        <form onSubmit={submit} className="space-y-4 max-w-xl">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Nama Mesin</label>
-                                <input
-                                    type="text"
-                                    value={data.machine_name}
-                                    onChange={e => setData('machine_name', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                />
-                                {errors.machine_name && <div className="text-red-500 text-sm">{errors.machine_name}</div>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Deskripsi Kerusakan</label>
-                                <textarea
-                                    value={data.description}
-                                    onChange={e => setData('description', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    rows="3"
-                                ></textarea>
-                                {errors.description && <div className="text-red-500 text-sm">{errors.description}</div>}
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                            >
-                                Kirim Laporan
-                            </button>
-                        </form>
-                    </div>
+            <div className="space-y-6">
+                {/* Stat Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard 
+                        icon={<FileText className="w-6 h-6" />}
+                        iconBgColor="bg-blue-100"
+                        iconColor="text-blue-600"
+                        value={stats?.totalLaporan || "0"}
+                        label="Laporan Terkirim"
+                    />
+                    <StatCard 
+                        icon={<CheckCircle className="w-6 h-6" />}
+                        iconBgColor="bg-emerald-100"
+                        iconColor="text-emerald-600"
+                        value={stats?.disetujui || "0"}
+                        label="Disetujui"
+                    />
+                    <StatCard 
+                        icon={<RefreshCcw className="w-6 h-6" />}
+                        iconBgColor="bg-purple-100"
+                        iconColor="text-purple-600"
+                        value={stats?.perluRevisi || "0"}
+                        label="Perlu Revisi"
+                    />
+                    <StatCard 
+                        icon={<XCircle className="w-6 h-6" />}
+                        iconBgColor="bg-rose-100"
+                        iconColor="text-rose-600"
+                        value={stats?.ditolak || "0"}
+                        label="Ditolak"
+                    />
+                </div>
 
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 className="text-lg font-bold mb-4">Riwayat Laporan Saya</h3>
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead>
-                                <tr>
-                                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mesin</th>
-                                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
-                                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {reports.map((report) => (
-                                    <tr key={report.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(report.created_at).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{report.machine_name}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{report.description}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {report.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {reports.length === 0 && (
-                                    <tr>
-                                        <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">Belum ada laporan.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                {/* Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6">Pengeluaran per Bulan 2024</h3>
+                        <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={lineData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 12}} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 12}} tickFormatter={(value) => `${value}Jt`} />
+                                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                                    <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} dot={{r: 4, fill: '#3B82F6', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 6}} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6">Status Mesin</h3>
+                        <div className="h-72 flex flex-col justify-center">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                    <Legend 
+                                        layout="vertical" 
+                                        verticalAlign="middle" 
+                                        align="right"
+                                        iconType="circle"
+                                        formatter={(value, entry) => <span className="text-sm text-gray-600 font-medium ml-1">{value} <span className="text-gray-900 font-bold ml-2">{entry.payload.value}</span></span>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Actions List */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div className="flex items-center mb-6">
+                        <div className="w-2 h-6 bg-amber-400 rounded-full mr-3"></div>
+                        <h3 className="text-lg font-bold text-gray-900">Laporan Perlu Tindakan</h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        {actionRequiredReports && actionRequiredReports.length > 0 ? (
+                            actionRequiredReports.map((report) => (
+                                <div key={report.id} className={`flex items-center justify-between p-4 rounded-xl border ${report.status === 'Ditolak' ? 'bg-rose-50 border-rose-100' : 'bg-purple-50 border-purple-100'}`}>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="text-sm font-bold text-gray-900">LPR-{new Date(report.created_at).getFullYear()}-{String(report.id).padStart(3, '0')}</span>
+                                            <Badge status={report.status} />
+                                        </div>
+                                        <h4 className="text-base font-bold text-gray-900">{report.machine?.name || 'Mesin'}</h4>
+                                        <p className="text-sm text-gray-600 mt-1">{report.revision_note || 'Mohon periksa kembali laporan Anda.'}</p>
+                                    </div>
+                                    <Link href={route('laporan-kerusakan')} className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                                        <Edit3 className="w-4 h-4 mr-2" />
+                                        Revisi
+                                    </Link>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500 text-sm">Tidak ada laporan yang perlu tindakan.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
