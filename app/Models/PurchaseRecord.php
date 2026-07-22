@@ -4,31 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RepairReport extends Model
+class PurchaseRecord extends Model
 {
     protected $fillable = [
-        'fund_request_id', 'staff_id', 'manager_id', 'period_start', 'period_end',
-        'summary', 'actual_amount', 'proof_path', 'status', 'verified_at', 'approved_at',
+        'purchase_document_id', 'staff_accounting_id', 'manager_id', 'notes', 'status', 'revision_note', 'archived_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'period_start' => 'date',
-            'period_end' => 'date',
-            'verified_at' => 'datetime',
-            'approved_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
-    public function fundRequest()
+    public function purchaseDocument()
     {
-        return $this->belongsTo(FundRequest::class);
+        return $this->belongsTo(PurchaseDocument::class);
     }
 
-    public function staff()
+    public function staffAccounting()
     {
-        return $this->belongsTo(User::class, 'staff_id');
+        return $this->belongsTo(User::class, 'staff_accounting_id');
     }
 
     public function manager()
@@ -39,9 +35,8 @@ class RepairReport extends Model
     public function transitionTo(string $newStatus, ?string $note = null, ?int $managerId = null)
     {
         $validTransitions = [
-            'Dikirim' => ['Diverifikasi', 'Direvisi'],
-            'Diverifikasi' => ['Disetujui', 'Direvisi'],
-            'Direvisi' => ['Dikirim'],
+            'Diajukan' => ['Diarsipkan', 'Direvisi'],
+            'Direvisi' => ['Diajukan'],
         ];
 
         if (!isset($validTransitions[$this->status]) || !in_array($newStatus, $validTransitions[$this->status])) {
@@ -57,11 +52,8 @@ class RepairReport extends Model
         if ($managerId !== null) {
             $this->manager_id = $managerId;
         }
-        if ($newStatus === 'Diverifikasi' && !$this->verified_at) {
-            $this->verified_at = now();
-        }
-        if ($newStatus === 'Disetujui' && !$this->approved_at) {
-            $this->approved_at = now();
+        if ($newStatus === 'Diarsipkan' && !$this->archived_at) {
+            $this->archived_at = now();
         }
         $this->save();
     }

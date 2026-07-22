@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FundRequest;
+use App\Models\FundProposal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Inertia\Inertia;
@@ -13,17 +13,17 @@ class ReportController extends Controller
     {
         abort_unless(in_array($request->user()->role, ['staff_accounting', 'manager_accounting']), 403);
 
-        $fundRequests = $this->filteredQuery($request)->get();
+        $fundProposals = $this->filteredQuery($request)->get();
 
         return Inertia::render('Reports/Index', [
-            'fundRequests' => $fundRequests,
+            'fundProposals' => $fundProposals,
             'filters' => $request->only(['start_date', 'end_date', 'status']),
             'summary' => [
-                'total' => $fundRequests->count(),
-                'total_diajukan' => $fundRequests->sum('amount'),
-                'total_disetujui' => $fundRequests->where('status', 'Disetujui')->sum('amount'),
-                'total_ditolak' => $fundRequests->where('status', 'Ditolak')->count(),
-                'total_menunggu' => $fundRequests->where('status', 'Menunggu Persetujuan')->count(),
+                'total' => $fundProposals->count(),
+                'total_diajukan' => $fundProposals->sum('amount'),
+                'total_dicairkan' => $fundProposals->whereNotNull('disbursed_at')->sum('amount'),
+                'total_direvisi' => $fundProposals->whereIn('status', ['Direvisi Staff Accounting', 'Direvisi Manager'])->count(),
+                'total_menunggu' => $fundProposals->whereIn('status', ['Diajukan', 'Menunggu Persetujuan Manager'])->count(),
             ],
         ]);
     }
@@ -32,29 +32,29 @@ class ReportController extends Controller
     {
         abort_unless(in_array($request->user()->role, ['staff_accounting', 'manager_accounting']), 403);
 
-        $fundRequests = $this->filteredQuery($request)->get();
+        $fundProposals = $this->filteredQuery($request)->get();
 
-        $filename = 'laporan-perbaikan-mesin-'.now()->format('Y-m-d-His').'.csv';
+        $filename = 'laporan-pengajuan-dana-barang-'.now()->format('Y-m-d-His').'.csv';
 
-        return Response::streamDownload(function () use ($fundRequests) {
+        return Response::streamDownload(function () use ($fundProposals) {
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'Tanggal Pengajuan', 'Mesin', 'Deskripsi Kerusakan', 'Diajukan Oleh',
+                'Tanggal Pengajuan', 'Barang', 'Deskripsi', 'Diajukan Oleh',
                 'Nominal', 'Justifikasi', 'Status', 'Diproses Oleh', 'Tanggal Update',
             ]);
 
-            foreach ($fundRequests as $fundRequest) {
+            foreach ($fundProposals as $fundProposal) {
                 fputcsv($handle, [
-                    $fundRequest->created_at->format('Y-m-d H:i'),
-                    $fundRequest->damageReport?->machine_name,
-                    $fundRequest->damageReport?->description,
-                    $fundRequest->staff?->name,
-                    $fundRequest->amount,
-                    $fundRequest->description,
-                    $fundRequest->status,
-                    $fundRequest->manager?->name,
-                    $fundRequest->updated_at->format('Y-m-d H:i'),
+                    $fundProposal->created_at->format('Y-m-d H:i'),
+                    $fundProposal->purchaseRequest?->item_name,
+                    $fundProposal->purchaseRequest?->description,
+                    $fundProposal->staffPurchasing?->name,
+                    $fundProposal->amount,
+                    $fundProposal->description,
+                    $fundProposal->status,
+                    $fundProposal->manager?->name,
+                    $fundProposal->updated_at->format('Y-m-d H:i'),
                 ]);
             }
 
@@ -64,7 +64,7 @@ class ReportController extends Controller
 
     private function filteredQuery(Request $request)
     {
-        $query = FundRequest::with(['damageReport', 'staff', 'manager'])->latest();
+        $query = FundProposal::with(['purchaseRequest', 'staffPurchasing', 'manager'])->latest();
 
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);

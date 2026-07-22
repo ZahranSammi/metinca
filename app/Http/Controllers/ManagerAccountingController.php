@@ -2,166 +2,114 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FundRequest;
-use App\Models\DamageReport;
-use App\Models\Machine;
-use App\Models\RepairReport;
+use App\Models\FundProposal;
+use App\Models\PurchaseRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ManagerAccountingController extends Controller
 {
+    public function dashboard(Request $request)
+    {
+        $menungguApprovalDana = FundProposal::where('status', 'Menunggu Persetujuan Manager')->count();
+        $menungguPeriksaLaporan = PurchaseRecord::where('status', 'Diajukan')->count();
+        $totalDicairkan = FundProposal::whereNotNull('disbursed_at')->count();
+        $totalDiarsipkan = PurchaseRecord::where('status', 'Diarsipkan')->count();
+
+        $currentYear = date('Y');
+        $disbursed = FundProposal::whereYear('disbursed_at', $currentYear)->whereNotNull('disbursed_at')->get();
+
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $lineData = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthTotal = $disbursed->filter(fn ($fp) => $fp->disbursed_at->month === $i)->sum('amount');
+            $lineData[] = [
+                'name' => $months[$i - 1],
+                'value' => round($monthTotal / 1000000, 2),
+            ];
+        }
+
+        return Inertia::render('ManagerAccounting/Dashboard', [
+            'stats' => compact('menungguApprovalDana', 'menungguPeriksaLaporan', 'totalDicairkan', 'totalDiarsipkan'),
+            'lineData' => $lineData,
+        ]);
+    }
+
     public function approvalDana()
     {
-        $requests = FundRequest::with('damageReport.machine', 'staff')
-            ->where('status', 'Menunggu Persetujuan')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $disbursements = FundRequest::with('damageReport.machine', 'staff')
-            ->where('status', 'Disetujui')
+        $requests = FundProposal::with('purchaseRequest', 'staffPurchasing')
+            ->where('status', 'Menunggu Persetujuan Manager')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('ManagerAccounting/ApprovalDana', [
             'requests' => $requests,
-            'disbursements' => $disbursements,
         ]);
     }
 
-    public function approvalDanaUpdate(Request $request, $id)
+    public function approvalDanaSetuju(Request $request, FundProposal $fundProposal)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:Disetujui,Ditolak,Direvisi',
-            'catatan' => 'required_if:status,Direvisi|nullable|string',
-        ]);
+        abort_unless($fundProposal->status === 'Menunggu Persetujuan Manager', 422);
 
-        $fundRequest = FundRequest::with('damageReport.machine')->findOrFail($id);
-        abort_unless($fundRequest->status === 'Menunggu Persetujuan', 422);
+        $fundProposal->transitionTo('Dana Cair', null, null, $request->user()->id);
 
-        if ($validated['status'] === 'Direvisi') {
-            $fundRequest->transitionTo('Direvisi', $validated['catatan'], $request->user()->id);
-            return redirect()->back()->with('success', 'Pengajuan dana dikirim kembali ke Staff Accounting untuk direvisi.');
-        }
-
-        if ($validated['status'] === 'Ditolak') {
-            $fundRequest->transitionTo('Ditolak', null, $request->user()->id);
-            $fundRequest->damageReport->transitionTo('Diverifikasi');
-            return redirect()->back()->with('success', 'Pengajuan dana ditolak.');
-        }
-
-        $fundRequest->transitionTo('Disetujui', null, $request->user()->id);
-
-        return redirect()->back()->with('success', 'Pengajuan dana disetujui. Silakan lanjutkan ke pencairan dana.');
+        return redirect()->back()->with('success', 'Dana pembelian disetujui dan dicairkan ke Staff Accounting.');
     }
 
-    public function cairkanDana(Request $request, $id)
+    public function approvalDanaRevisi(Request $request, FundProposal $fundProposal)
     {
-        $fundRequest = FundRequest::with('damageReport.machine')->findOrFail($id);
-        abort_unless($fundRequest->status === 'Disetujui', 422);
+        abort_unless($fundProposal->status === 'Menunggu Persetujuan Manager', 422);
 
-        $machine = $fundRequest->damageReport->machine;
+        $validated = $request->validate(['catatan' => 'required|string']);
 
-        if ($machine && $fundRequest->amount > $machine->budget) {
-            return redirect()->back()->withErrors([
-                'amount' => 'Nominal pengajuan melebihi sisa anggaran perbaikan untuk mesin '.$machine->name.' (Rp '.number_format($machine->budget, 0, ',', '.').').',
-            ]);
-        }
+        $fundProposal->transitionTo('Direvisi Manager', $validated['catatan'], null, $request->user()->id);
 
-        $fundRequest->transitionTo('Dana Cair', null, $request->user()->id);
-
-        if ($machine) {
-            $machine->decrement('budget', $fundRequest->amount);
-        }
-
-        $fundRequest->damageReport->transitionTo('Dalam Perbaikan');
-
-        return redirect()->back()->with('success', 'Dana perbaikan telah dicairkan ke Manager Maintenance.');
+        return redirect()->back()->with('success', 'Pengajuan dana dikirim kembali untuk direvisi.');
     }
 
     public function periksaLaporan()
     {
-        $requests = FundRequest::with('damageReport.machine', 'staff', 'damageReport.user')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $repairReports = RepairReport::with('fundRequest.damageReport.machine', 'staff', 'manager')
+        $records = PurchaseRecord::with('purchaseDocument.fundProposal.purchaseRequest', 'staffAccounting')
+            ->where('status', 'Diajukan')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('ManagerAccounting/PeriksaLaporan', [
-            'requests' => $requests,
-            'repairReports' => $repairReports,
+            'records' => $records,
         ]);
     }
 
-    public function verifikasiLaporanPerbaikan(Request $request, $id)
+    public function periksaLaporanSetuju(Request $request, PurchaseRecord $purchaseRecord)
     {
-        $report = RepairReport::findOrFail($id);
-        abort_unless($report->status === 'Dikirim', 422);
+        abort_unless($purchaseRecord->status === 'Diajukan', 422);
 
-        $report->transitionTo('Diverifikasi', null, $request->user()->id);
+        $purchaseRecord->transitionTo('Diarsipkan', null, $request->user()->id);
+        $purchaseRecord->load('purchaseDocument.fundProposal.purchaseRequest');
+        $purchaseRecord->purchaseDocument?->fundProposal?->purchaseRequest?->transitionTo('Selesai');
 
-        return redirect()->back()->with('success', 'Laporan perbaikan telah diverifikasi.');
+        return redirect()->back()->with('success', 'Pencatatan laporan disetujui dan diarsipkan. Siklus pembelian ditutup.');
     }
 
-    public function revisiLaporanPerbaikan(Request $request, $id)
+    public function periksaLaporanRevisi(Request $request, PurchaseRecord $purchaseRecord)
     {
-        $report = RepairReport::findOrFail($id);
-        abort_unless(in_array($report->status, ['Dikirim', 'Diverifikasi']), 422);
+        abort_unless($purchaseRecord->status === 'Diajukan', 422);
 
-        $validated = $request->validate([
-            'revision_note' => 'required|string',
-        ]);
+        $validated = $request->validate(['catatan' => 'required|string']);
 
-        $report->transitionTo('Direvisi', $validated['revision_note'], $request->user()->id);
+        $purchaseRecord->transitionTo('Direvisi', $validated['catatan'], $request->user()->id);
 
-        return redirect()->back()->with('success', 'Laporan perbaikan dikembalikan ke Staff Accounting untuk direvisi.');
+        return redirect()->back()->with('success', 'Pencatatan laporan dikirim kembali ke Staff Accounting untuk direvisi.');
     }
 
-    public function setujuiLaporanPerbaikan(Request $request, $id)
+    public function historiPembelian()
     {
-        $report = RepairReport::with('fundRequest.damageReport')->findOrFail($id);
-        abort_unless($report->status === 'Diverifikasi', 422);
-
-        $report->transitionTo('Disetujui', null, $request->user()->id);
-
-        // Closing: laporan pertanggungjawaban disetujui, siklus perbaikan mesin ini selesai.
-        $report->fundRequest?->damageReport->transitionTo('Selesai');
-
-        return redirect()->back()->with('success', 'Laporan perbaikan telah disetujui. Siklus perbaikan mesin ditutup.');
-    }
-
-    public function historiPerbaikan()
-    {
-        // Histori seluruh dana yang sudah dicairkan (baik masih berjalan maupun sudah selesai)
-        $requests = FundRequest::with('damageReport.machine', 'staff', 'damageReport.user')
-            ->where('status', 'Dana Cair')
-            ->orderBy('created_at', 'desc')
+        $records = PurchaseRecord::with('purchaseDocument.fundProposal.purchaseRequest.requester', 'staffAccounting')
+            ->where('status', 'Diarsipkan')
+            ->orderBy('archived_at', 'desc')
             ->get();
 
-        return Inertia::render('ManagerAccounting/HistoriPerbaikan', [
-            'requests' => $requests
+        return Inertia::render('ManagerAccounting/HistoriPembelian', [
+            'records' => $records,
         ]);
-    }
-
-    public function kelolaAnggaran()
-    {
-        $machines = Machine::orderBy('name')->get();
-
-        return Inertia::render('ManagerAccounting/KelolaAnggaran', [
-            'machines' => $machines,
-        ]);
-    }
-
-    public function kelolaAnggaranUpdate(Request $request, Machine $machine)
-    {
-        $validated = $request->validate([
-            'budget' => 'required|numeric|min:0',
-        ]);
-
-        $machine->update($validated);
-
-        return redirect()->back()->with('success', 'Anggaran mesin berhasil diperbarui.');
     }
 }

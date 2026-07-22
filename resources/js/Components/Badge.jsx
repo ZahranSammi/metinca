@@ -2,29 +2,25 @@ export default function Badge({ status }) {
     let colorClass = 'bg-gray-100 text-gray-800';
 
     switch (status?.toLowerCase()) {
-        case 'beroperasi':
         case 'selesai':
+        case 'selesai pembelian':
         case 'disetujui':
+        case 'diarsipkan':
             colorClass = 'bg-emerald-100 text-emerald-700';
             break;
-        case 'rusak':
-        case 'ditolak':
-            colorClass = 'bg-rose-100 text-rose-700';
-            break;
-        case 'perbaikan':
-        case 'diverifikasi':
-        case 'dalam perbaikan':
-        case 'perbaikan berjalan':
-        case 'pengajuan dana':
+        case 'masuk daftar pembelian':
+        case 'menunggu persetujuan manager':
+        case 'dana cair':
+        case 'dana diterima purchasing':
             colorClass = 'bg-blue-100 text-blue-700';
             break;
         case 'direvisi':
+        case 'direvisi staff accounting':
+        case 'direvisi manager':
             colorClass = 'bg-purple-100 text-purple-700';
             break;
         case 'menunggu':
-        case 'menunggu persetujuan':
-        case 'dikirim':
-        case 'dilaporkan':
+        case 'diajukan':
             colorClass = 'bg-amber-100 text-amber-700';
             break;
         default:

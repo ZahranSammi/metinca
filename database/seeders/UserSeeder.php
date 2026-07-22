@@ -13,10 +13,17 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         \App\Models\User::create([
-            'name' => 'Manager Maintenance',
-            'email' => 'mm@example.com',
+            'name' => 'Requester',
+            'email' => 'requester@example.com',
             'password' => \Illuminate\Support\Facades\Hash::make('password'),
-            'role' => 'manager_maintenance'
+            'role' => 'requester'
+        ]);
+
+        \App\Models\User::create([
+            'name' => 'Staff Purchasing',
+            'email' => 'purchasing@example.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'role' => 'staff_purchasing'
         ]);
 
         \App\Models\User::create([

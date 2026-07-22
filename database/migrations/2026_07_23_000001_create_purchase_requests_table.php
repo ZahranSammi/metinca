@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('machines', function (Blueprint $table) {
+        Schema::create('purchase_requests', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();
-            $table->string('name');
-            $table->string('model_name');
-            $table->string('category');
-            $table->string('pic');
-            $table->string('status')->default('Beroperasi');
+            $table->foreignId('requester_id')->constrained('users')->cascadeOnDelete();
+            $table->string('item_name');
+            $table->unsignedInteger('quantity');
+            $table->text('description');
+            $table->string('status')->default('Diajukan');
             $table->timestamps();
         });
     }
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('machines');
+        Schema::dropIfExists('purchase_requests');
     }
 };

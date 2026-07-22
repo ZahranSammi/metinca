@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard,
-    Wrench,
+    Package,
     FileText,
     Settings,
     LogOut,
@@ -12,7 +12,9 @@ import {
     CheckSquare,
     BarChart2,
     History,
-    Wallet
+    Wallet,
+    ClipboardList,
+    ShoppingCart
 } from 'lucide-react';
 import { useState } from 'react';
 import Dropdown from '@/Components/Dropdown';
@@ -25,7 +27,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const pageTitle = header || "Dashboard";
 
     const navLinks = [
-        ...(user.role === 'manager_maintenance' ? [
+        ...(user.role === 'requester' ? [
             {
                 name: 'Dashboard',
                 href: route('dashboard'),
@@ -33,16 +35,36 @@ export default function AuthenticatedLayout({ header, children }) {
                 active: route().current('dashboard')
             },
             {
-                name: 'Data Mesin',
-                href: route('master-mesin'),
-                icon: <Wrench className="w-5 h-5 mr-3" />,
-                active: route().current('master-mesin')
+                name: 'Pengajuan Barang',
+                href: route('requester.pengajuan-barang'),
+                icon: <FileText className="w-5 h-5 mr-3" />,
+                active: route().current('requester.pengajuan-barang')
+            }
+        ] : []),
+        ...(user.role === 'staff_purchasing' ? [
+            {
+                name: 'Dashboard',
+                href: route('dashboard'),
+                icon: <LayoutDashboard className="w-5 h-5 mr-3" />,
+                active: route().current('dashboard')
             },
             {
-                name: 'Laporan Kerusakan',
-                href: route('laporan-kerusakan'),
-                icon: <FileText className="w-5 h-5 mr-3" />,
-                active: route().current('laporan-kerusakan')
+                name: 'Daftar Pembelian',
+                href: route('purchasing.daftar-pembelian'),
+                icon: <ClipboardList className="w-5 h-5 mr-3" />,
+                active: route().current('purchasing.daftar-pembelian')
+            },
+            {
+                name: 'Pengajuan Dana',
+                href: route('purchasing.pengajuan-dana'),
+                icon: <Wallet className="w-5 h-5 mr-3" />,
+                active: route().current('purchasing.pengajuan-dana')
+            },
+            {
+                name: 'Data Barang',
+                href: route('purchasing.data-barang'),
+                icon: <Package className="w-5 h-5 mr-3" />,
+                active: route().current('purchasing.data-barang')
             }
         ] : []),
         ...((user.role === 'staff_accounting') ? [
@@ -53,28 +75,34 @@ export default function AuthenticatedLayout({ header, children }) {
                 active: route().current('staff.dashboard')
             },
             {
-                name: 'Verifikasi Laporan',
-                href: route('staff.verifikasi-laporan'),
+                name: 'Verifikasi Pengajuan Dana',
+                href: route('staff.verifikasi-pengajuan-dana'),
                 icon: <CheckSquare className="w-5 h-5 mr-3" />,
-                active: route().current('staff.verifikasi-laporan')
+                active: route().current('staff.verifikasi-pengajuan-dana')
+            },
+            {
+                name: 'Pencairan Dana',
+                href: route('staff.pencairan-dana'),
+                icon: <Wallet className="w-5 h-5 mr-3" />,
+                active: route().current('staff.pencairan-dana')
+            },
+            {
+                name: 'Verifikasi Data Barang',
+                href: route('staff.verifikasi-data-barang'),
+                icon: <Package className="w-5 h-5 mr-3" />,
+                active: route().current('staff.verifikasi-data-barang')
             },
             {
                 name: 'Buat Laporan',
                 href: route('staff.buat-laporan'),
                 icon: <FileText className="w-5 h-5 mr-3" />,
                 active: route().current('staff.buat-laporan')
-            },
-            {
-                name: 'Laporan Perbaikan',
-                href: route('staff.laporan-perbaikan'),
-                icon: <BarChart2 className="w-5 h-5 mr-3" />,
-                active: route().current('staff.laporan-perbaikan')
             }
         ] : []),
         ...(user.role === 'manager_accounting' ? [
             {
                 name: 'Dashboard',
-                href: route('dashboard'), // Tetap ke default dashboard (kalau ada) atau ubah nanti
+                href: route('dashboard'),
                 icon: <LayoutDashboard className="w-5 h-5 mr-3" />,
                 active: route().current('dashboard')
             },
@@ -91,16 +119,10 @@ export default function AuthenticatedLayout({ header, children }) {
                 active: route().current('manager-acc.periksa-laporan')
             },
             {
-                name: 'Histori Perbaikan',
-                href: route('manager-acc.histori-perbaikan'),
+                name: 'Histori Pembelian',
+                href: route('manager-acc.histori-pembelian'),
                 icon: <History className="w-5 h-5 mr-3" />,
-                active: route().current('manager-acc.histori-perbaikan')
-            },
-            {
-                name: 'Kelola Anggaran',
-                href: route('manager-acc.kelola-anggaran'),
-                icon: <Wallet className="w-5 h-5 mr-3" />,
-                active: route().current('manager-acc.kelola-anggaran')
+                active: route().current('manager-acc.histori-pembelian')
             }
         ] : [])
     ];
@@ -128,11 +150,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 <div className="flex items-center justify-center h-20 border-b border-gray-100 px-6">
                     <div className="flex items-center">
                         <div className="bg-blue-600 rounded-lg p-2 mr-3 text-white">
-                            <Wrench className="w-6 h-6" />
+                            <ShoppingCart className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900 leading-tight">SIPERBAIK</h1>
-                            <p className="text-xs text-gray-500">Inventaris Perbaikan Mesin</p>
+                            <h1 className="text-xl font-bold text-gray-900 leading-tight">SIBAROP</h1>
+                            <p className="text-xs text-gray-500">Inventarisasi Barang Operasional</p>
                         </div>
                     </div>
                 </div>
@@ -146,7 +168,8 @@ export default function AuthenticatedLayout({ header, children }) {
                             <div className="ml-3">
                                 <p className="text-sm font-bold text-gray-900">{user.name}</p>
                                 <p className="text-xs text-blue-600">{
-                                    user.role === 'manager_maintenance' ? 'Manager Maintenance' :
+                                    user.role === 'requester' ? 'Requester' :
+                                    user.role === 'staff_purchasing' ? 'Staff Purchasing' :
                                     user.role === 'staff_accounting' ? 'Staff Accounting' :
                                     user.role === 'manager_accounting' ? 'Manager Accounting' : user.role
                                 }</p>
@@ -217,8 +240,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         </button>
                         <div>
                             <h2 className="text-xl font-bold text-gray-900 leading-tight">{pageTitle}</h2>
-                            <p className="text-sm text-gray-500">SIPERBAIK &middot; {
-                                user.role === 'manager_maintenance' ? 'Manager Maintenance' :
+                            <p className="text-sm text-gray-500">SIBAROP &middot; {
+                                user.role === 'requester' ? 'Requester' :
+                                user.role === 'staff_purchasing' ? 'Staff Purchasing' :
                                 user.role === 'staff_accounting' ? 'Staff Accounting' :
                                 user.role === 'manager_accounting' ? 'Manager Accounting' : user.role
                             }</p>

@@ -10,8 +10,8 @@ Route::get('/', function () {
 });
 
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DamageReportController;
-use App\Http\Controllers\MachineController;
+use App\Http\Controllers\RequesterController;
+use App\Http\Controllers\StaffPurchasingController;
 use App\Http\Controllers\StaffAccountingController;
 use App\Http\Controllers\ManagerAccountingController;
 use App\Http\Controllers\ReportController;
@@ -23,53 +23,58 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Manager Maintenance
-    Route::middleware('role:manager_maintenance')->group(function () {
-        Route::get('/master-mesin', [MachineController::class, 'index'])->name('master-mesin');
-        Route::post('/master-mesin', [MachineController::class, 'store'])->name('master-mesin.store');
-        Route::put('/master-mesin/{machine}', [MachineController::class, 'update'])->name('master-mesin.update');
-        Route::delete('/master-mesin/{machine}', [MachineController::class, 'destroy'])->name('master-mesin.destroy');
+    // Requester
+    Route::middleware('role:requester')->group(function () {
+        Route::get('/requester/pengajuan-barang', [RequesterController::class, 'index'])->name('requester.pengajuan-barang');
+        Route::post('/requester/pengajuan-barang', [RequesterController::class, 'store'])->name('requester.pengajuan-barang.store');
+    });
 
-        Route::get('/laporan-kerusakan', [DamageReportController::class, 'index'])->name('laporan-kerusakan');
-        Route::post('/laporan-kerusakan', [DamageReportController::class, 'store'])->name('laporan-kerusakan.store');
-        Route::put('/laporan-kerusakan/{damageReport}', [DamageReportController::class, 'update'])->name('laporan-kerusakan.update');
-        Route::put('/laporan-kerusakan/{damageReport}/mulai-perbaikan', [DamageReportController::class, 'mulaiPerbaikan'])->name('laporan-kerusakan.mulai-perbaikan');
-        Route::put('/laporan-kerusakan/{damageReport}/selesai-perbaikan', [DamageReportController::class, 'selesaiPerbaikan'])->name('laporan-kerusakan.selesai-perbaikan');
+    // Staff Purchasing
+    Route::middleware('role:staff_purchasing')->group(function () {
+        Route::get('/purchasing/daftar-pembelian', [StaffPurchasingController::class, 'daftarPembelian'])->name('purchasing.daftar-pembelian');
+        Route::put('/purchasing/daftar-pembelian/{purchaseRequest}/terima', [StaffPurchasingController::class, 'terimaPengajuan'])->name('purchasing.daftar-pembelian.terima');
+
+        Route::get('/purchasing/pengajuan-dana', [StaffPurchasingController::class, 'pengajuanDana'])->name('purchasing.pengajuan-dana');
+        Route::post('/purchasing/pengajuan-dana', [StaffPurchasingController::class, 'storeFundProposal'])->name('purchasing.pengajuan-dana.store');
+        Route::put('/purchasing/pengajuan-dana/{fundProposal}', [StaffPurchasingController::class, 'reviseFundProposal'])->name('purchasing.pengajuan-dana.revisi');
+        Route::put('/purchasing/pengajuan-dana/{fundProposal}/selesai', [StaffPurchasingController::class, 'selesaikanPembelian'])->name('purchasing.pengajuan-dana.selesai');
+
+        Route::get('/purchasing/data-barang', [StaffPurchasingController::class, 'dataBarang'])->name('purchasing.data-barang');
+        Route::post('/purchasing/data-barang', [StaffPurchasingController::class, 'storePurchaseDocument'])->name('purchasing.data-barang.store');
+        Route::put('/purchasing/data-barang/{purchaseDocument}', [StaffPurchasingController::class, 'revisePurchaseDocument'])->name('purchasing.data-barang.revisi');
     });
 
     // Staff Accounting
     Route::middleware('role:staff_accounting')->group(function () {
         Route::get('/staff/dashboard', [StaffAccountingController::class, 'dashboard'])->name('staff.dashboard');
 
-        Route::get('/staff/verifikasi-laporan', [StaffAccountingController::class, 'verifikasiLaporan'])->name('staff.verifikasi-laporan');
-        Route::put('/staff/verifikasi-laporan/{id}', [StaffAccountingController::class, 'verifikasiLaporanUpdate'])->name('staff.verifikasi-laporan.update');
-        Route::put('/staff/verifikasi-laporan/{id}/revisi', [StaffAccountingController::class, 'verifikasiLaporanRevisi'])->name('staff.verifikasi-laporan.revisi');
-        Route::put('/staff/verifikasi-laporan/{id}/tolak', [StaffAccountingController::class, 'verifikasiLaporanTolak'])->name('staff.verifikasi-laporan.tolak');
+        Route::get('/staff/verifikasi-pengajuan-dana', [StaffAccountingController::class, 'verifikasiPengajuanDana'])->name('staff.verifikasi-pengajuan-dana');
+        Route::put('/staff/verifikasi-pengajuan-dana/{fundProposal}/setuju', [StaffAccountingController::class, 'verifikasiPengajuanDanaSetuju'])->name('staff.verifikasi-pengajuan-dana.setuju');
+        Route::put('/staff/verifikasi-pengajuan-dana/{fundProposal}/revisi', [StaffAccountingController::class, 'verifikasiPengajuanDanaRevisi'])->name('staff.verifikasi-pengajuan-dana.revisi');
+
+        Route::get('/staff/pencairan-dana', [StaffAccountingController::class, 'pencairanDana'])->name('staff.pencairan-dana');
+        Route::put('/staff/pencairan-dana/{fundProposal}/catat', [StaffAccountingController::class, 'catatPencairan'])->name('staff.pencairan-dana.catat');
+
+        Route::get('/staff/verifikasi-data-barang', [StaffAccountingController::class, 'verifikasiDataBarang'])->name('staff.verifikasi-data-barang');
+        Route::put('/staff/verifikasi-data-barang/{purchaseDocument}/setuju', [StaffAccountingController::class, 'verifikasiDataBarangSetuju'])->name('staff.verifikasi-data-barang.setuju');
+        Route::put('/staff/verifikasi-data-barang/{purchaseDocument}/revisi', [StaffAccountingController::class, 'verifikasiDataBarangRevisi'])->name('staff.verifikasi-data-barang.revisi');
 
         Route::get('/staff/buat-laporan', [StaffAccountingController::class, 'buatLaporan'])->name('staff.buat-laporan');
-        Route::post('/staff/buat-laporan', [StaffAccountingController::class, 'storeFundRequest'])->name('staff.buat-laporan.store');
-        Route::put('/staff/buat-laporan/{fundRequest}', [StaffAccountingController::class, 'reviseFundRequest'])->name('staff.buat-laporan.revisi');
-
-        Route::get('/staff/laporan-perbaikan', [StaffAccountingController::class, 'laporanPerbaikanIndex'])->name('staff.laporan-perbaikan');
-        Route::post('/staff/laporan-perbaikan', [StaffAccountingController::class, 'laporanPerbaikanStore'])->name('staff.laporan-perbaikan.store');
-        Route::put('/staff/laporan-perbaikan/{id}', [StaffAccountingController::class, 'laporanPerbaikanUpdate'])->name('staff.laporan-perbaikan.update');
+        Route::post('/staff/buat-laporan', [StaffAccountingController::class, 'storePurchaseRecord'])->name('staff.buat-laporan.store');
+        Route::put('/staff/buat-laporan/{purchaseRecord}', [StaffAccountingController::class, 'revisePurchaseRecord'])->name('staff.buat-laporan.revisi');
     });
 
     // Manager Accounting
     Route::middleware('role:manager_accounting')->group(function () {
         Route::get('/manager-acc/approval-dana', [ManagerAccountingController::class, 'approvalDana'])->name('manager-acc.approval-dana');
-        Route::put('/manager-acc/approval-dana/{id}', [ManagerAccountingController::class, 'approvalDanaUpdate'])->name('manager-acc.approval-dana.update');
-        Route::put('/manager-acc/approval-dana/{id}/cairkan', [ManagerAccountingController::class, 'cairkanDana'])->name('manager-acc.approval-dana.cairkan');
+        Route::put('/manager-acc/approval-dana/{fundProposal}/setuju', [ManagerAccountingController::class, 'approvalDanaSetuju'])->name('manager-acc.approval-dana.setuju');
+        Route::put('/manager-acc/approval-dana/{fundProposal}/revisi', [ManagerAccountingController::class, 'approvalDanaRevisi'])->name('manager-acc.approval-dana.revisi');
 
         Route::get('/manager-acc/periksa-laporan', [ManagerAccountingController::class, 'periksaLaporan'])->name('manager-acc.periksa-laporan');
-        Route::put('/manager-acc/periksa-laporan/{id}/verifikasi', [ManagerAccountingController::class, 'verifikasiLaporanPerbaikan'])->name('manager-acc.laporan-perbaikan.verifikasi');
-        Route::put('/manager-acc/periksa-laporan/{id}/revisi', [ManagerAccountingController::class, 'revisiLaporanPerbaikan'])->name('manager-acc.laporan-perbaikan.revisi');
-        Route::put('/manager-acc/periksa-laporan/{id}/setujui', [ManagerAccountingController::class, 'setujuiLaporanPerbaikan'])->name('manager-acc.laporan-perbaikan.setujui');
+        Route::put('/manager-acc/periksa-laporan/{purchaseRecord}/setuju', [ManagerAccountingController::class, 'periksaLaporanSetuju'])->name('manager-acc.periksa-laporan.setuju');
+        Route::put('/manager-acc/periksa-laporan/{purchaseRecord}/revisi', [ManagerAccountingController::class, 'periksaLaporanRevisi'])->name('manager-acc.periksa-laporan.revisi');
 
-        Route::get('/manager-acc/histori-perbaikan', [ManagerAccountingController::class, 'historiPerbaikan'])->name('manager-acc.histori-perbaikan');
-
-        Route::get('/manager-acc/kelola-anggaran', [ManagerAccountingController::class, 'kelolaAnggaran'])->name('manager-acc.kelola-anggaran');
-        Route::put('/manager-acc/kelola-anggaran/{machine}', [ManagerAccountingController::class, 'kelolaAnggaranUpdate'])->name('manager-acc.kelola-anggaran.update');
+        Route::get('/manager-acc/histori-pembelian', [ManagerAccountingController::class, 'historiPembelian'])->name('manager-acc.histori-pembelian');
     });
 
     // Staff Accounting & Manager Accounting bersama

@@ -1,30 +1,38 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Wrench } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 
 const ROLES = [
     {
-        id: 'mm',
-        name: 'Ahmad Maulana',
-        role: 'Manager Maintenance',
-        email: 'mm@example.com',
-        initials: 'AM',
+        id: 'req',
+        name: 'Requester',
+        role: 'Requester',
+        email: 'requester@example.com',
+        initials: 'RQ',
         color: 'bg-blue-600',
     },
     {
+        id: 'sp',
+        name: 'Staff Purchasing',
+        role: 'Staff Purchasing',
+        email: 'purchasing@example.com',
+        initials: 'SP',
+        color: 'bg-orange-500',
+    },
+    {
         id: 'sa',
-        name: 'Siti Rahayu',
+        name: 'Staff Accounting',
         role: 'Staff Accounting',
         email: 'sa@example.com',
-        initials: 'SR',
+        initials: 'SA',
         color: 'bg-emerald-500',
     },
     {
         id: 'ma',
-        name: 'Budi Hartono',
+        name: 'Manager Accounting',
         role: 'Manager Accounting',
         email: 'ma@example.com',
-        initials: 'BH',
+        initials: 'MA',
         color: 'bg-purple-500',
     }
 ];
@@ -55,11 +63,11 @@ export default function Login({ status }) {
 
             <div className="mb-10 flex items-center">
                 <div className="bg-blue-600 rounded-2xl p-3 mr-4 text-white shadow-lg shadow-blue-200">
-                    <Wrench className="w-8 h-8" />
+                    <ShoppingCart className="w-8 h-8" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">SIPERBAIK</h1>
-                    <p className="text-sm text-gray-500">Sistem Inventaris Perbaikan Mesin</p>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">SIBAROP</h1>
+                    <p className="text-sm text-gray-500">Inventarisasi Barang Operasional</p>
                 </div>
             </div>
 
@@ -118,7 +126,7 @@ export default function Login({ status }) {
             </div>
             
             <div className="mt-10 text-center text-xs text-gray-400 font-medium">
-                PT. Maju Bersama Industri &middot; SIPERBAIK v1.0
+                PT. Maju Bersama Industri &middot; SIBAROP v1.0
             </div>
         </div>
     );
