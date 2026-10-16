@@ -2,55 +2,41 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PurchaseDocument extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'fund_proposal_id', 'staff_purchasing_id', 'staff_accounting_id',
-        'item_name', 'quantity', 'unit_price', 'total_price', 'document_path', 'status', 'revision_note',
+        'nomor_dokumen',
+        'purchase_id',
+        'created_by',
+        'catatan',
+        'status',
     ];
 
-    public function fundProposal()
+    public function purchase(): BelongsTo
     {
-        return $this->belongsTo(FundProposal::class);
+        return $this->belongsTo(Purchase::class, 'purchase_id');
     }
 
-    public function staffPurchasing()
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'staff_purchasing_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function staffAccounting()
+    public function reports(): HasMany
     {
-        return $this->belongsTo(User::class, 'staff_accounting_id');
+        return $this->hasMany(PurchaseReport::class, 'purchase_document_id');
     }
 
-    public function purchaseRecord()
+    public function reviewHistories(): MorphMany
     {
-        return $this->hasOne(PurchaseRecord::class);
-    }
-
-    public function transitionTo(string $newStatus, ?string $note = null, ?int $staffAccountingId = null)
-    {
-        $validTransitions = [
-            'Diajukan' => ['Disetujui', 'Direvisi'],
-            'Direvisi' => ['Diajukan'],
-        ];
-
-        if (!isset($validTransitions[$this->status]) || !in_array($newStatus, $validTransitions[$this->status])) {
-            abort(422, "Transisi status tidak valid dari {$this->status} ke {$newStatus}");
-        }
-
-        $this->status = $newStatus;
-        if ($note !== null) {
-            $this->revision_note = $note;
-        } elseif ($newStatus !== 'Direvisi') {
-            $this->revision_note = null;
-        }
-        if ($staffAccountingId !== null) {
-            $this->staff_accounting_id = $staffAccountingId;
-        }
-        $this->save();
+        return $this->morphMany(ReviewHistory::class, 'reviewable');
     }
 }

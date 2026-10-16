@@ -1,279 +1,499 @@
-import { Link, usePage } from '@inertiajs/react';
-import {
-    LayoutDashboard,
-    Package,
-    FileText,
-    Settings,
-    LogOut,
-    Bell,
-    ChevronDown,
-    Menu,
-    X,
-    CheckSquare,
-    BarChart2,
-    History,
-    Wallet,
-    ClipboardList,
-    ShoppingCart
-} from 'lucide-react';
-import { useState } from 'react';
 import Dropdown from '@/Components/Dropdown';
+import {
+    ArrowsRightLeftIcon,
+    BellIcon,
+    BuildingOfficeIcon,
+    ChevronDownIcon,
+    ChevronRightIcon,
+    ClipboardIcon,
+    DashboardIcon,
+    FileTextIcon,
+    LogoutIcon,
+    MapPinIcon,
+    MenuIcon,
+    PackageIcon,
+    ShieldCheckIcon,
+    ShoppingCartIcon,
+    UsersIcon,
+    XMarkIcon,
+} from '@/Components/Icons';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { auth, flash } = usePage().props;
+    const user = auth.user;
 
-    // Default title if not provided via header
-    const pageTitle = header || "Dashboard";
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-    const navLinks = [
-        ...(user.role === 'requester' ? [
-            {
-                name: 'Dashboard',
-                href: route('dashboard'),
-                icon: <LayoutDashboard className="w-5 h-5 mr-3" />,
-                active: route().current('dashboard')
-            },
-            {
-                name: 'Pengajuan Barang',
-                href: route('requester.pengajuan-barang'),
-                icon: <FileText className="w-5 h-5 mr-3" />,
-                active: route().current('requester.pengajuan-barang')
-            }
-        ] : []),
-        ...(user.role === 'staff_purchasing' ? [
-            {
-                name: 'Dashboard',
-                href: route('dashboard'),
-                icon: <LayoutDashboard className="w-5 h-5 mr-3" />,
-                active: route().current('dashboard')
-            },
-            {
-                name: 'Daftar Pembelian',
-                href: route('purchasing.daftar-pembelian'),
-                icon: <ClipboardList className="w-5 h-5 mr-3" />,
-                active: route().current('purchasing.daftar-pembelian')
-            },
-            {
-                name: 'Pengajuan Dana',
-                href: route('purchasing.pengajuan-dana'),
-                icon: <Wallet className="w-5 h-5 mr-3" />,
-                active: route().current('purchasing.pengajuan-dana')
-            },
-            {
-                name: 'Data Barang',
-                href: route('purchasing.data-barang'),
-                icon: <Package className="w-5 h-5 mr-3" />,
-                active: route().current('purchasing.data-barang')
-            }
-        ] : []),
-        ...((user.role === 'staff_accounting') ? [
-            {
-                name: 'Dashboard',
-                href: route('staff.dashboard'),
-                icon: <LayoutDashboard className="w-5 h-5 mr-3" />,
-                active: route().current('staff.dashboard')
-            },
-            {
-                name: 'Verifikasi Pengajuan Dana',
-                href: route('staff.verifikasi-pengajuan-dana'),
-                icon: <CheckSquare className="w-5 h-5 mr-3" />,
-                active: route().current('staff.verifikasi-pengajuan-dana')
-            },
-            {
-                name: 'Pencairan Dana',
-                href: route('staff.pencairan-dana'),
-                icon: <Wallet className="w-5 h-5 mr-3" />,
-                active: route().current('staff.pencairan-dana')
-            },
-            {
-                name: 'Verifikasi Data Barang',
-                href: route('staff.verifikasi-data-barang'),
-                icon: <Package className="w-5 h-5 mr-3" />,
-                active: route().current('staff.verifikasi-data-barang')
-            },
-            {
-                name: 'Buat Laporan',
-                href: route('staff.buat-laporan'),
-                icon: <FileText className="w-5 h-5 mr-3" />,
-                active: route().current('staff.buat-laporan')
-            }
-        ] : []),
-        ...(user.role === 'manager_accounting' ? [
-            {
-                name: 'Dashboard',
-                href: route('dashboard'),
-                icon: <LayoutDashboard className="w-5 h-5 mr-3" />,
-                active: route().current('dashboard')
-            },
-            {
-                name: 'Approval Dana',
-                href: route('manager-acc.approval-dana'),
-                icon: <CheckSquare className="w-5 h-5 mr-3" />,
-                active: route().current('manager-acc.approval-dana')
-            },
-            {
-                name: 'Periksa Laporan',
-                href: route('manager-acc.periksa-laporan'),
-                icon: <BarChart2 className="w-5 h-5 mr-3" />,
-                active: route().current('manager-acc.periksa-laporan')
-            },
-            {
-                name: 'Histori Pembelian',
-                href: route('manager-acc.histori-pembelian'),
-                icon: <History className="w-5 h-5 mr-3" />,
-                active: route().current('manager-acc.histori-pembelian')
-            }
-        ] : [])
-    ];
-
-    const sysLinks = [
-        {
-            name: 'Pengaturan',
-            href: route('profile.edit'),
-            icon: <Settings className="w-5 h-5 mr-3" />
+    const getRoleBadge = (role) => {
+        switch (role) {
+            case 'karyawan':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-blue-200">
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                        Karyawan Accounting
+                    </span>
+                );
+            case 'staff_accounting':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-amber-200">
+                        <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                        Staff Accounting
+                    </span>
+                );
+            case 'staff_gudang':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-amber-200">
+                        <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                        Staff Gudang
+                    </span>
+                );
+            case 'inventarisir':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-emerald-200">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        Petugas Inventarisir
+                    </span>
+                );
+            case 'manager_accounting':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-purple-50 text-purple-800 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-purple-200">
+                        <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                        Manager Accounting
+                    </span>
+                );
+            case 'manager_gudang':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-purple-50 text-purple-800 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-purple-200">
+                        <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                        Manager Gudang
+                    </span>
+                );
+            case 'direktur_sdm':
+                return (
+                    <span className="inline-flex items-center gap-2 bg-rose-50 text-rose-800 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-rose-200">
+                        <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+                        Direktur SDM
+                    </span>
+                );
+            default:
+                return (
+                    <span className="bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-slate-200">
+                        {role}
+                    </span>
+                );
         }
+    };
+
+    const [openSubmenus, setOpenSubmenus] = useState({
+        barang: true,
+        peminjaman: true,
+        pengadaan: false,
+        laporan: false,
+    });
+
+    const toggleSubmenu = (key) => {
+        setOpenSubmenus((prev) => ({
+            ...prev,
+            [key]: !prev[key],
+        }));
+    };
+
+    const navigationGroups = [
+        {
+            groupName: 'Menu Utama',
+            items: [
+                {
+                    type: 'link',
+                    name: 'Dashboard',
+                    href: route('dashboard'),
+                    active: route().current('dashboard'),
+                    icon: DashboardIcon,
+                },
+                {
+                    type: 'submenu',
+                    id: 'barang',
+                    name: 'Data Barang',
+                    icon: PackageIcon,
+                    active: route().current('barang.*'),
+                    children: [
+                        {
+                            name: 'Master Data Barang',
+                            href: route('barang.index'),
+                            active: route().current('barang.index'),
+                        },
+                        {
+                            name: 'Pendataan Ruangan & Cabang',
+                            href: route('barang.pendataan-ruangan'),
+                            active: route().current('barang.pendataan-ruangan'),
+                            badge: 'Ruangan',
+                        },
+                        {
+                            name: 'Tracking Posisi Barang',
+                            href: route('barang.tracking'),
+                            active: route().current('barang.tracking'),
+                            badge: 'Tracking',
+                        },
+                    ],
+                },
+                {
+                    type: 'submenu',
+                    id: 'peminjaman',
+                    name: 'Peminjaman Antar Cabang',
+                    icon: ArrowsRightLeftIcon,
+                    active: route().current('peminjaman.*'),
+                    children: [
+                        {
+                            name: 'Monitoring & Pinjam Barang',
+                            href: route('peminjaman.index'),
+                            active: route().current('peminjaman.*'),
+                            badge: '3 Cabang',
+                        },
+                    ],
+                },
+                {
+                    type: 'submenu',
+                    id: 'pengadaan',
+                    name: 'Pengadaan & Pembelian',
+                    icon: ShoppingCartIcon,
+                    active: route().current('pengajuan.*') || route().current('pembelian.*'),
+                    children: [
+                        {
+                            name: 'Pengajuan Pembelian',
+                            href: route('pengajuan.index'),
+                            active: route().current('pengajuan.*'),
+                        },
+                        {
+                            name: 'Realisasi Pembelian',
+                            href: route('pembelian.index'),
+                            active: route().current('pembelian.*'),
+                        },
+                    ],
+                },
+                {
+                    type: 'submenu',
+                    id: 'laporan',
+                    name: 'Laporan & Arsip',
+                    icon: FileTextIcon,
+                    active: route().current('laporan.*'),
+                    children: [
+                        {
+                            name: 'Rekap Laporan Pembelian',
+                            href: route('laporan.index'),
+                            active: route().current('laporan.*'),
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            groupName: 'Sistem & Audit',
+            items: [
+                ...(['manager_gudang', 'manager_accounting', 'direktur_sdm'].includes(user.role)
+                    ? [
+                          {
+                              type: 'link',
+                              name: 'Manajemen Pengguna',
+                              href: route('users.index'),
+                              active: route().current('users.index'),
+                              icon: UsersIcon,
+                          },
+                      ]
+                    : []),
+                {
+                    type: 'link',
+                    name: 'Audit Trail',
+                    href: route('audit-logs.index'),
+                    active: route().current('audit-logs.index'),
+                    icon: ShieldCheckIcon,
+                },
+            ],
+        },
     ];
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-            {/* Mobile sidebar backdrop */}
-            {sidebarOpen && (
-                <div 
-                    className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+        <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-600 selection:text-white">
+            {/* Desktop & Mobile Main Shell */}
+            <div className="flex flex-1 min-h-screen">
+                {/* Mobile Backdrop */}
+                {isSidebarOpen && (
+                    <div
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs lg:hidden transition-opacity"
+                    />
+                )}
 
-            {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
-                <div className="flex items-center justify-center h-20 border-b border-gray-100 px-6">
-                    <div className="flex items-center">
-                        <div className="bg-blue-600 rounded-lg p-2 mr-3 text-white">
-                            <ShoppingCart className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-900 leading-tight">SIBAROP</h1>
-                            <p className="text-xs text-gray-500">Inventarisasi Barang Operasional</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto py-6 px-4">
-                    <div className="mb-6 px-2">
-                        <div className="flex items-center">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
-                                {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                {/* Sidebar Navigation */}
+                <aside
+                    className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-950 text-slate-300 border-r border-slate-800 transition-all duration-300 lg:static ${
+                        isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    } ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-72'} w-72`}
+                >
+                    {/* Brand / Company Header */}
+                    <div className="h-20 flex items-center justify-between px-5 border-b border-slate-800/80 bg-slate-950/80">
+                        <Link href={route('dashboard')} className="flex items-center gap-3.5 overflow-hidden">
+                            <div className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-blue-600 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-indigo-500/25 ring-1 ring-white/20">
+                                MP
                             </div>
-                            <div className="ml-3">
-                                <p className="text-sm font-bold text-gray-900">{user.name}</p>
-                                <p className="text-xs text-blue-600">{
-                                    user.role === 'requester' ? 'Requester' :
-                                    user.role === 'staff_purchasing' ? 'Staff Purchasing' :
-                                    user.role === 'staff_accounting' ? 'Staff Accounting' :
-                                    user.role === 'manager_accounting' ? 'Manager Accounting' : user.role
-                                }</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-2">
-                        <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">MENU UTAMA</p>
-                        <nav className="space-y-1">
-                            {navLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                                        link.active 
-                                        ? 'bg-blue-600 text-white' 
-                                        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-                                    }`}
-                                >
-                                    {link.icon}
-                                    {link.name}
-                                    {link.active && <ChevronDown className="w-4 h-4 ml-auto transform -rotate-90" />}
-                                </Link>
-                            ))}
-                        </nav>
-                    </div>
-
-                    <div className="mt-8">
-                        <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">SISTEM</p>
-                        <nav className="space-y-1">
-                            {sysLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    className="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                                >
-                                    {link.icon}
-                                    {link.name}
-                                </Link>
-                            ))}
-                        </nav>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t border-gray-100">
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        className="flex w-full items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                        <LogOut className="w-5 h-5 mr-3" />
-                        Keluar
-                    </Link>
-                </div>
-            </aside>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <header className="bg-white border-b border-gray-200 h-20 flex items-center justify-between px-6 lg:px-8 z-10 shrink-0">
-                    <div className="flex items-center">
-                        <button
-                            onClick={() => setSidebarOpen(true)}
-                            className="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none lg:hidden"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </button>
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900 leading-tight">{pageTitle}</h2>
-                            <p className="text-sm text-gray-500">SIBAROP &middot; {
-                                user.role === 'requester' ? 'Requester' :
-                                user.role === 'staff_purchasing' ? 'Staff Purchasing' :
-                                user.role === 'staff_accounting' ? 'Staff Accounting' :
-                                user.role === 'manager_accounting' ? 'Manager Accounting' : user.role
-                            }</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center space-x-4">
-                        <Link 
-                            href={route('logout')} 
-                            method="post" 
-                            as="button"
-                            className="hidden sm:flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
-                        >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                            Ganti Peran
+                            {!isSidebarCollapsed && (
+                                <div className="leading-tight truncate">
+                                    <div className="font-extrabold text-white text-base tracking-tight truncate">
+                                        METINCA PRIMA
+                                    </div>
+                                    <div className="text-xs text-slate-400 font-semibold tracking-wider uppercase truncate mt-0.5">
+                                        Inventory System
+                                    </div>
+                                </div>
+                            )}
                         </Link>
-                        
-                        <button className="relative p-2 text-gray-400 hover:text-gray-500">
-                            <span className="absolute top-1.5 right-1.5 block w-2 h-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-                            <Bell className="w-6 h-6" />
+
+                        {/* Mobile Close Button */}
+                        <button
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden"
+                        >
+                            <XMarkIcon className="w-6 h-6" />
                         </button>
-
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-sm cursor-pointer hover:bg-blue-700 transition-colors">
-                            {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                        </div>
                     </div>
-                </header>
 
-                <main className="flex-1 overflow-y-auto bg-[#F4F7FE] p-6 lg:p-8">
-                    {children}
-                </main>
+                    {/* Navigation Menu with Accordion Submenus */}
+                    <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+                        {navigationGroups.map((group) => (
+                            <div key={group.groupName}>
+                                {!isSidebarCollapsed && (
+                                    <div className="px-3 mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                        {group.groupName}
+                                    </div>
+                                )}
+                                <nav className="space-y-1.5">
+                                    {group.items.map((item) => {
+                                        const Icon = item.icon;
+                                        if (item.type === 'link') {
+                                            return (
+                                                <Link
+                                                    key={item.name}
+                                                    href={item.href}
+                                                    title={isSidebarCollapsed ? item.name : undefined}
+                                                    className={`flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all group ${
+                                                        item.active
+                                                            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30 font-bold'
+                                                            : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                                                    } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
+                                                >
+                                                    <Icon
+                                                        className={`w-5 h-5 shrink-0 transition-transform ${
+                                                            item.active
+                                                                ? 'text-white'
+                                                                : 'text-slate-400 group-hover:text-white'
+                                                        }`}
+                                                    />
+                                                    {!isSidebarCollapsed && (
+                                                        <span className="truncate">{item.name}</span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        }
+
+                                        // Submenu with accordion
+                                        const isOpen = openSubmenus[item.id];
+                                        return (
+                                            <div key={item.id} className="space-y-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleSubmenu(item.id)}
+                                                    title={isSidebarCollapsed ? item.name : undefined}
+                                                    className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all group ${
+                                                        item.active
+                                                            ? 'bg-slate-900 text-white border border-slate-800 font-bold'
+                                                            : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                                                    } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
+                                                >
+                                                    <div className="flex items-center gap-3.5 min-w-0">
+                                                        <Icon
+                                                            className={`w-5 h-5 shrink-0 transition-transform ${
+                                                                item.active
+                                                                    ? 'text-indigo-400'
+                                                                    : 'text-slate-400 group-hover:text-white'
+                                                            }`}
+                                                        />
+                                                        {!isSidebarCollapsed && (
+                                                            <span className="truncate">{item.name}</span>
+                                                        )}
+                                                    </div>
+                                                    {!isSidebarCollapsed && (
+                                                        <ChevronDownIcon
+                                                            className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                                                isOpen ? 'rotate-180 text-white' : ''
+                                                            }`}
+                                                        />
+                                                    )}
+                                                </button>
+
+                                                {isOpen && !isSidebarCollapsed && (
+                                                    <div className="pl-3 py-1 space-y-1 ml-4 border-l border-slate-800/80">
+                                                        {item.children.map((child) => (
+                                                            <Link
+                                                                key={child.name}
+                                                                href={child.href}
+                                                                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition ${
+                                                                    child.active
+                                                                        ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                                                                        : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                                                                }`}
+                                                            >
+                                                                <span className="truncate">{child.name}</span>
+                                                                {child.badge && (
+                                                                    <span
+                                                                        className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                                                                            child.active
+                                                                                ? 'bg-white/20 text-white'
+                                                                                : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                                                                        }`}
+                                                                    >
+                                                                        {child.badge}
+                                                                    </span>
+                                                                )}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </nav>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Sidebar Footer User Card */}
+                    <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
+                        {!isSidebarCollapsed ? (
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shrink-0 ring-1 ring-white/10 shadow-xs">
+                                        {user.name.charAt(0)}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-bold text-white truncate">{user.name}</div>
+                                        <div className="text-xs text-slate-400 truncate mt-0.5">
+                                            {user.jabatan || user.role}
+                                        </div>
+                                    </div>
+                                </div>
+                                <Link
+                                    href={route('logout')}
+                                    method="post"
+                                    as="button"
+                                    title="Keluar dari akun"
+                                    className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                                >
+                                    <LogoutIcon className="w-5 h-5" />
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="flex justify-center">
+                                <Link
+                                    href={route('logout')}
+                                    method="post"
+                                    as="button"
+                                    title="Keluar"
+                                    className="p-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                                >
+                                    <LogoutIcon className="w-5 h-5" />
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                </aside>
+
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+                    {/* Top App Header */}
+                    <header className="h-20 bg-white border-b border-slate-200/80 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 lg:px-10">
+                        <div className="flex items-center gap-4">
+                            {/* Mobile Hamburger */}
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+                                title="Buka menu navigasi"
+                            >
+                                <MenuIcon className="w-6 h-6" />
+                            </button>
+
+                            {/* Desktop Collapse Toggle */}
+                            <button
+                                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                className="hidden lg:flex p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                                title={isSidebarCollapsed ? 'Perluas sidebar' : 'Perkecil sidebar'}
+                            >
+                                <MenuIcon className="w-5 h-5" />
+                            </button>
+
+                            {/* Organization Breadcrumb */}
+                            <div className="hidden sm:flex items-center gap-2.5 text-sm">
+                                <span className="font-bold text-slate-800">PT Metinca Prima Industrial Works</span>
+                                <span className="text-slate-300">/</span>
+                                <span className="text-slate-500 font-medium">Divisi Accounting</span>
+                            </div>
+                        </div>
+
+                        {/* Right Section: Role Badge & User Dropdown */}
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="hidden md:block">{getRoleBadge(user.role)}</div>
+
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <button className="flex items-center gap-2.5 p-2 sm:px-4 sm:py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition text-sm font-semibold text-slate-700 focus:outline-hidden">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                                            {user.name.charAt(0)}
+                                        </div>
+                                        <div className="hidden sm:block text-left leading-tight">
+                                            <div className="font-bold text-slate-900 text-sm">{user.name}</div>
+                                            <div className="text-xs text-slate-500 font-normal mt-0.5">{user.email}</div>
+                                        </div>
+                                        <ChevronDownIcon className="w-4 h-4 text-slate-400 hidden sm:block ml-1" />
+                                    </button>
+                                </Dropdown.Trigger>
+
+                                <Dropdown.Content>
+                                    <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                        <div className="font-bold text-slate-900 text-sm">{user.name}</div>
+                                        <div className="text-slate-500 text-xs truncate mt-0.5">{user.email}</div>
+                                        <div className="mt-2">{getRoleBadge(user.role)}</div>
+                                    </div>
+                                    <Dropdown.Link href={route('profile.edit')} className="text-sm">Pengaturan Profil</Dropdown.Link>
+                                    <Dropdown.Link href={route('logout')} method="post" as="button" className="text-sm">
+                                        Keluar (Log Out)
+                                    </Dropdown.Link>
+                                </Dropdown.Content>
+                            </Dropdown>
+                        </div>
+                    </header>
+
+                    {/* Flash Success Notification */}
+                    {flash && flash.success && (
+                        <div className="bg-emerald-600 text-white px-5 py-3.5 shadow-sm border-b border-emerald-700 flex items-center justify-between text-sm font-semibold">
+                            <div className="max-w-7xl 2xl:max-w-screen-2xl mx-auto w-full flex items-center gap-3">
+                                <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+                                <span>{flash.success}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Page Header (if provided) */}
+                    {header && (
+                        <div className="bg-white border-b border-slate-200/80 px-4 sm:px-6 lg:px-10 py-6">
+                            <div className="max-w-7xl 2xl:max-w-screen-2xl mx-auto">{header}</div>
+                        </div>
+                    )}
+
+                    {/* Main Content Body */}
+                    <main className="flex-1 max-w-7xl 2xl:max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-10 py-8">
+                        {children}
+                    </main>
+                </div>
             </div>
         </div>
     );

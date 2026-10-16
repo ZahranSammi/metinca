@@ -2,34 +2,40 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PurchaseRequest extends Model
 {
-    protected $fillable = ['requester_id', 'item_name', 'quantity', 'description', 'status'];
+    use HasFactory;
 
-    public function requester()
+    protected $fillable = [
+        'nomor_pengajuan',
+        'user_id',
+        'catatan',
+        'status',
+    ];
+
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'requester_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function fundProposal()
+    public function items(): HasMany
     {
-        return $this->hasOne(FundProposal::class);
+        return $this->hasMany(PurchaseRequestItem::class, 'purchase_request_id');
     }
 
-    public function transitionTo(string $newStatus)
+    public function purchases(): HasMany
     {
-        $validTransitions = [
-            'Diajukan' => ['Masuk Daftar Pembelian'],
-            'Masuk Daftar Pembelian' => ['Selesai'],
-        ];
+        return $this->hasMany(Purchase::class, 'purchase_request_id');
+    }
 
-        if (!isset($validTransitions[$this->status]) || !in_array($newStatus, $validTransitions[$this->status])) {
-            abort(422, "Transisi status tidak valid dari {$this->status} ke {$newStatus}");
-        }
-
-        $this->status = $newStatus;
-        $this->save();
+    public function reviewHistories(): MorphMany
+    {
+        return $this->morphMany(ReviewHistory::class, 'reviewable');
     }
 }
